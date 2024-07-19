@@ -20,7 +20,7 @@ def predict_vitals(args):
     fs = args.sampling_rate
     sample_data_path = args.video_path
 
-    dXsub = preprocess_raw_video(sample_data_path, dim=36)
+    dXsub = preprocess_raw_video(sample_data_path, dim=36, sample_dir=args.sample_dir)
     print('dXsub shape', dXsub.shape)
 
     dXsub_len = (dXsub.shape[0] // frame_depth)  * frame_depth
@@ -42,22 +42,51 @@ def predict_vitals(args):
     resp_pred = scipy.signal.filtfilt(b_resp, a_resp, np.double(resp_pred))
 
     ########## Plot ##################
-    plt.subplot(211)
-    plt.plot(pulse_pred)
-    plt.title('Pulse Prediction')
-    plt.subplot(212)
-    plt.plot(resp_pred)
-    plt.title('Resp Prediction')
-    plt.show()
+    if args.fig_dir is not None:
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(30, 10))
+        ax1.plot(pulse_pred)
+        ax1.set_title('Pulse Prediction')
+        ax2.plot(resp_pred)
+        ax2.set_title('Resp Prediction')
+        plt.savefig(args.fig_dir)
+
+    if args.pulse_dir is not None:
+        with open(args.pulse_dir, 'wb') as pulse_file:
+            np.save(pulse_file, pulse_pred)
+    if args.resp_dir is not None:
+        with open(args.resp_dir, 'wb') as resp_file:
+            np.save(resp_file, resp_pred)
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--video_path', type=str, help='processed video path')
-    parser.add_argument('--sampling_rate', type=int, default = 30, help='sampling rate of your video')
-    parser.add_argument('--batch_size', type=int, default = 100, help='batch size (multiplier of 10)')
+    parser.add_argument('--sampling_rate', type=int, default=30, help='sampling rate of your video')
+    parser.add_argument('--batch_size', type=int, default=100, help='batch size (multiplier of 10)')
+    parser.add_argument(
+        '--sample-dir',
+        type=str,
+        default=None,
+        help='where to save the sample pre-processed frame'
+    )
+    parser.add_argument(
+        '--fig-dir',
+        type=str,
+        default=None,
+        help='where to save the pulse and respiration figure'
+    )
+    parser.add_argument(
+        '--pulse-dir',
+        type=str,
+        default=None,
+        help='where to save the pulse vector'
+    )
+    parser.add_argument(
+        '--resp-dir',
+        type=str,
+        default=None,
+        help='where to save the respiration vector'
+    )
     args = parser.parse_args()
 
     predict_vitals(args)
-

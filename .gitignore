@@ -1,0 +1,5 @@
+videos/*
+!videos/PLACEHOLDER
+outputs/*
+!outputs/PLACEHOLDER
+code/__pycache__

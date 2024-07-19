@@ -7,7 +7,7 @@ import time
 import scipy.io
 from scipy.sparse import spdiags
 
-def preprocess_raw_video(videoFilePath, dim=36):
+def preprocess_raw_video(videoFilePath, dim=36, sample_dir=None):
 
     #########################################################################
     # set up
@@ -34,9 +34,10 @@ def preprocess_raw_video(videoFilePath, dim=36):
         Xsub[i, :, :, :] = vidLxL
         success, img = vidObj.read() # read the next one
         i = i + 1
-    plt.imshow(Xsub[0])
-    plt.title('Sample Preprocessed Frame')
-    plt.show()
+    if sample_dir is not None:
+      plt.imshow(Xsub[0])
+      plt.title('Sample Preprocessed Frame')
+      plt.savefig(sample_dir)
     #########################################################################
     # Normalized Frames in the motion branch
     normalized_len = len(t) - 1
