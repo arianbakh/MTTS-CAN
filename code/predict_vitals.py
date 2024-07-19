@@ -8,8 +8,24 @@ sys.path.append('../')
 from model import Attention_mask, MTTS_CAN
 import h5py
 import matplotlib.pyplot as plt
-from scipy.signal import butter
+from scipy.signal import butter, periodogram, filtfilt
 from inference_preprocess import preprocess_raw_video, detrend
+
+
+def next_power_of_2(x):
+    return 1 if x == 0 else 2 ** (x - 1).bit_length()
+
+
+def calculate_fft_hr(ppg_signal, fs=60, low_pass=0.75, high_pass=2.5):
+    ppg_signal = np.expand_dims(ppg_signal, 0)
+    N = next_power_of_2(ppg_signal.shape[1])
+    f_ppg, pxx_ppg = periodogram(ppg_signal, fs=fs, nfft=N, detrend=False)
+    fmask_ppg = np.argwhere((f_ppg >= low_pass) & (f_ppg <= high_pass))
+    mask_ppg = np.take(f_ppg, fmask_ppg)
+    mask_pxx = np.take(pxx_ppg, fmask_ppg)
+    fft_hr = np.take(mask_ppg, np.argmax(mask_pxx, 0))[0] * 60
+    return fft_hr
+
 
 def predict_vitals(args):
     img_rows = 36
@@ -34,12 +50,12 @@ def predict_vitals(args):
     pulse_pred = yptest[0]
     pulse_pred = detrend(np.cumsum(pulse_pred), 100)
     [b_pulse, a_pulse] = butter(1, [0.75 / fs * 2, 2.5 / fs * 2], btype='bandpass')
-    pulse_pred = scipy.signal.filtfilt(b_pulse, a_pulse, np.double(pulse_pred))
+    pulse_pred = filtfilt(b_pulse, a_pulse, np.double(pulse_pred))
 
     resp_pred = yptest[1]
     resp_pred = detrend(np.cumsum(resp_pred), 100)
     [b_resp, a_resp] = butter(1, [0.08 / fs * 2, 0.5 / fs * 2], btype='bandpass')
-    resp_pred = scipy.signal.filtfilt(b_resp, a_resp, np.double(resp_pred))
+    resp_pred = filtfilt(b_resp, a_resp, np.double(resp_pred))
 
     ########## Plot ##################
     if args.fig_dir is not None:
@@ -56,6 +72,9 @@ def predict_vitals(args):
     if args.resp_dir is not None:
         with open(args.resp_dir, 'wb') as resp_file:
             np.save(resp_file, resp_pred)
+
+    bpm_fft = calculate_fft_hr(pulse_pred)
+    print('BPM:', bpm_fft)
 
 
 if __name__ == "__main__":
