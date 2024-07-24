@@ -2,9 +2,7 @@ import tensorflow as tf
 import numpy as np
 import scipy.io
 import os
-import sys
 import argparse
-sys.path.append('../')
 from model import Attention_mask, MTTS_CAN
 import h5py
 import matplotlib.pyplot as plt
@@ -31,7 +29,7 @@ def predict_vitals(args):
     img_rows = 36
     img_cols = 36
     frame_depth = 10
-    model_checkpoint = './mtts_can.hdf5'
+    model_checkpoint = args.model_path
     batch_size = args.batch_size
     fs = args.sampling_rate
     sample_data_path = args.video_path
@@ -105,6 +103,11 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help='where to save the respiration vector'
+    )
+    parser.add_argument(
+        '--model-path',
+        type=str,
+        help='path to model weight'
     )
     args = parser.parse_args()
 

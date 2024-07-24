@@ -14,4 +14,4 @@ Tested on the following environments:
 # Inference
 
 Inference may freeze if you use GPU(s), in which case you have to set the `CUDA_VISIBLE_DEVICES` environment variable to null string when running the code:
-1. `CUDA_VISIBLE_DEVICES= python code/predict_vitals.py --video_path videos/vid.mp4 --sample-dir outputs/sample.png --fig-dir outputs/fig.png --pulse-dir outputs/pulse.npy --resp-dir outputs/resp.npy`
+1. `CUDA_VISIBLE_DEVICES= python code/predict_vitals.py --video_path videos/vid.mp4 --sample-dir outputs/sample.png --fig-dir outputs/fig.png --pulse-dir outputs/pulse.npy --resp-dir outputs/resp.npy --model-path mtts_can.hdf5`
